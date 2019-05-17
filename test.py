@@ -1,21 +1,23 @@
-#!/usr/bin/python
-# coding: utf-8
+# -*- coding: utf-8 -*-
+import scrapy
 
-from sqlalchemy import Table, MetaData, Column, Integer, String, create_engine
-# import pymssql
-# import generate
-# users = generate.get_users(1)
-# print(users)
 
-engine = create_engine(
-    'mssql+pymssql://sa:6HJaDCj5mK65nzu8@127.0.0.1:1433/mydb?charset=utf8',
-    encoding='utf8')
+class TestSpider(scrapy.Spider):
+    name = 'test'
+    allowed_domains = ['phonesdata.com']
+    start_urls = ['http://phonesdata.com/ru/smartphones/']
 
-metadata = MetaData()
-test = Table('test', metadata, Column('id', Integer, primary_key=True),
-        Column('name', String), Column('fullname', String))
-metadata.create_all(engine)
+    def parse(self, response):
+        # get all categories
+        result = []
+        text = response.xpath(
+            "//a[starts-with(@href, 'http://phonesdata.com/ru/smartphones')]/text()").extract()
+        for i in text:
+          if "\n" not in i:
+            if i not in result:
+              result.append(i)
+        print(result)
 
-ins = test.insert().values(name='Юрий', fullname='Гагарин')
-conn = engine.connect()
-result = conn.execute(ins)
+        for i in result:
+            data = response.xpath("//p[@class='list-items']/a/text()").extract()
+            print(data)
